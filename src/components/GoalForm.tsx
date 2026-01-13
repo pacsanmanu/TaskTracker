@@ -96,7 +96,7 @@ export const GoalForm: React.FC<GoalFormProps> = ({ onAddGoal, onUpdateGoal, goa
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? 'Saving...' : goal ? 'Save Changes' : 'Create Goal'}
             </Button>
           </DialogFooter>

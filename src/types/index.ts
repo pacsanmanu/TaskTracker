@@ -4,6 +4,7 @@ export interface Goal {
   title: string
   description: string | null
   is_active: boolean
+  order_index: number
   created_at: string
 }
 

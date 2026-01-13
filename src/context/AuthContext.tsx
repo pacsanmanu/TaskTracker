@@ -17,15 +17,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
+    console.log("AuthContext: Initializing...")
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setSession(session)
+        setUser(session?.user ?? null)
+        console.log("AuthContext: Session initialized", session?.user?.email)
+      } catch (error) {
+        console.error('AuthContext: Error initializing auth:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
 
-    // Listen for changes on auth state
+    initAuth()
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("AuthContext: Auth state changed", _event)
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)

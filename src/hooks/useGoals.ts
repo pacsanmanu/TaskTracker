@@ -16,7 +16,7 @@ export const useGoals = () => {
         .from('goals')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .order('order_index', { ascending: true })
 
       if (error) throw error
       setGoals(data || [])
@@ -35,17 +35,51 @@ export const useGoals = () => {
     if (!user) return
     
     try {
+      // Get the highest order_index to place the new goal at the end
+      const maxOrder = goals.length > 0 
+        ? Math.max(...goals.map(g => g.order_index)) 
+        : -1;
+
       const { data, error } = await supabase
         .from('goals')
-        .insert([{ title, description, user_id: user.id }])
+        .insert([{ 
+          title, 
+          description, 
+          user_id: user.id,
+          order_index: maxOrder + 1 
+        }])
         .select()
 
       if (error) throw error
-      setGoals([data[0], ...goals])
+      setGoals([...goals, data[0]])
       return data[0]
     } catch (error) {
       console.error('Error adding goal:', error)
       throw error
+    }
+  }
+
+  const updateGoalOrder = async (newGoals: Goal[]) => {
+    setGoals(newGoals) // Optimistic update
+    
+    try {
+      const updates = newGoals.map((goal, index) => ({
+        id: goal.id,
+        user_id: user?.id,
+        title: goal.title,
+        description: goal.description,
+        is_active: goal.is_active,
+        order_index: index,
+      }))
+
+      const { error } = await supabase
+        .from('goals')
+        .upsert(updates)
+
+      if (error) throw error
+    } catch (error) {
+      console.error('Error updating order:', error)
+      fetchGoals() // Revert on error
     }
   }
 
@@ -99,6 +133,7 @@ export const useGoals = () => {
     loading,
     addGoal,
     updateGoal,
+    updateGoalOrder,
     toggleGoalActive,
     deleteGoal,
     refreshGoals: fetchGoals
